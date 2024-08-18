@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { db } from '@/lib/firebase'
 import { collection, addDoc } from 'firebase/firestore'
 import { Observation } from '@/types'
@@ -10,6 +10,7 @@ export default function ChatInterface() {
   const [input, setInput] = useState('')
   const [observationData, setObservationData] = useState<Partial<Observation>>({})
   const [currentStep, setCurrentStep] = useState('location')
+  const chatWindowRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const fetchInitialMessage = async () => {
@@ -33,6 +34,12 @@ export default function ChatInterface() {
 
     fetchInitialMessage();
   }, [])
+
+  useEffect(() => {
+    if (chatWindowRef.current) {
+      chatWindowRef.current.scrollTop = chatWindowRef.current.scrollHeight
+    }
+  }, [messages])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -84,11 +91,13 @@ export default function ChatInterface() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-4 h-96 overflow-y-auto mb-4">
+    <div className="max-w-2xl mx-auto bg-gray-900 p-6 rounded-lg">
+      <div ref={chatWindowRef} className="bg-gray-800 rounded-lg shadow-md p-4 h-[28rem] overflow-y-auto mb-4">
         {messages.map((message, index) => (
           <div key={index} className={`mb-2 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-            <span className={`inline-block p-2 rounded-lg ${message.role === 'user' ? 'bg-blue-100' : 'bg-gray-100'}`}>
+            <span className={`inline-block p-2 rounded-lg ${
+              message.role === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-100'
+            }`}>
               {message.content}
             </span>
           </div>
@@ -99,7 +108,7 @@ export default function ChatInterface() {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          className="flex-grow border border-gray-300 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-grow bg-gray-700 text-gray-100 border border-gray-600 rounded-l-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           placeholder="Type your response..."
         />
         <button

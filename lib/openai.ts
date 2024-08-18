@@ -25,20 +25,11 @@ export async function getChatbotResponse(input: string, currentStep: string, obs
   }
 
   try {
-    if (currentStep === 'initial') {
-      const initialMessage = "Welcome to SafetyObserver! I'm here to help you report a safety observation. Let's start with the location of the incident. Where did it occur?";
-      return {
-        message: initialMessage,
-        data: {},
-        nextStep: 'location'
-      };
-    }
-
     const prompt = generatePrompt(input, currentStep, observationData);
     const response = await openai.chat.completions.create({
-      model: 'gpt-4o',
+      model: 'gpt-4',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 150,
+      max_tokens: 300,
       n: 1,
       temperature: 0.7,
     });
