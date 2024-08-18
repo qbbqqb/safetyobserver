@@ -63,10 +63,17 @@ export default function ChatInterface() {
       setMessages(prev => [...prev, botMessage])
 
       // Update observation data and move to next step
-      setObservationData(prev => ({ ...prev, ...data.data }))
+      setObservationData(prev => {
+        const updatedData = { ...prev, ...data.data };
+        console.log('Updated observationData:', updatedData);
+        return updatedData;
+      })
       setCurrentStep(data.nextStep)
+      console.log('Current step:', data.nextStep);
 
-      if (data.nextStep === 'complete') {
+      if (data.nextStep === 'endConversation') {
+        console.log('Conversation complete, preparing to save observation...');
+        console.log('Final observationData:', observationData);
         await saveObservation()
       }
     } catch (error) {
@@ -77,16 +84,30 @@ export default function ChatInterface() {
   }
 
   const saveObservation = async () => {
+    console.log('saveObservation function called');
+    console.log('Attempting to save observation:', observationData);
     try {
-      const docRef = await addDoc(collection(db, 'observations'), {
+      const finalObservationData = {
         ...observationData,
         timestamp: new Date(),
-        attachments: [], // Implement file upload functionality separately
-      })
-      setMessages(prev => [...prev, { role: 'bot', content: `Thank you for your report. Your observation has been saved with ID: ${docRef.id}` }])
+        severityLevel: observationData.severityLevel || 'medium',
+        category: observationData.category || 'general',
+        attachments: observationData.attachments || [],
+        isAnonymous: !observationData.reporterName,
+      };
+      const docRef = await addDoc(collection(db, 'observations'), finalObservationData);
+      console.log('Observation saved successfully. Document ID:', docRef.id);
+      console.log('Saved data:', finalObservationData);
+      setMessages(prev => [...prev, { role: 'bot', content: `Thank you for your report. Your observation has been saved with ID: ${docRef.id}` }]);
     } catch (error) {
-      console.error('Error saving observation:', error)
-      setMessages(prev => [...prev, { role: 'bot', content: 'There was an error saving your observation. Please try again.' }])
+      console.error('Error saving observation:', error);
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+      } else {
+        console.error('Unknown error:', error);
+      }
+      setMessages(prev => [...prev, { role: 'bot', content: 'There was an error saving your observation. Please try again.' }]);
     }
   }
 
