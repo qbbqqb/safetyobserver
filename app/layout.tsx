@@ -18,7 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} flex flex-col min-h-screen`}>
+      <body
+        className={`${inter.className} flex flex-col min-h-screen`}
+        data-new-gr-c-s-check-loaded=""
+        data-gr-ext-installed=""
+      >
         <Header />
         <main className="flex-grow container mx-auto px-4 py-8">{children}</main>
         <Footer />
