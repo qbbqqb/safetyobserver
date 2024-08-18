@@ -25,6 +25,15 @@ export async function getChatbotResponse(input: string, currentStep: string, obs
   }
 
   try {
+    if (currentStep === 'initial') {
+      const initialMessage = "Welcome to SafetyObserver! I'm here to help you report a safety observation. Let's start with the location of the incident. Where did it occur?";
+      return {
+        message: initialMessage,
+        data: {},
+        nextStep: 'location'
+      };
+    }
+
     const prompt = generatePrompt(input, currentStep, observationData);
     const response = await openai.chat.completions.create({
       model: 'gpt-4o',
@@ -47,21 +56,35 @@ export async function getChatbotResponse(input: string, currentStep: string, obs
 }
 
 function generatePrompt(input: string, currentStep: string, observationData: Partial<Observation>): string {
-  const steps = ['location', 'project', 'company', 'exactLocationDescription', 'observationDetails', 'actionsTaken', 'severityLevel', 'category'];
-  const nextStep = steps[steps.indexOf(currentStep) + 1];
+  let prompt = `You are a helpful safety assistant whose task is to collect information from users about safety observations. Follow these instructions:
 
-  let prompt = `Current step: ${currentStep}\nUser input: ${input}\n\n`;
-  prompt += `Based on the user's input, extract the relevant information for the "${currentStep}" field.\n`;
-  prompt += `Then, ask for information about the "${nextStep}" field.\n`;
-  prompt += `Provide a friendly and engaging response.\n\n`;
-  prompt += `Current observation data:\n${JSON.stringify(observationData, null, 2)}\n\n`;
-  prompt += `Response format:\n{
-    "message": "Your response to the user",
-    "data": {
-      "${currentStep}": "Extracted information"
-    },
-    "nextStep": "${nextStep}"
-  }`;
+1. If this is the initial interaction (currentStep is 'initial'), ask the user which language they want to use. Suggest these languages: English, Gaeilge, Română, Magyar, Nederlands, Русский, Українська, Español, Polski, Eesti, or other.
+
+2. Continue the conversation in the language selected by the user.
+
+3. Collect the following information from the user:
+   - Company they work for
+   - Location of the observation
+   - Description of the observation (if vague or one-word, ask for more details)
+   - Action taken to respond to or correct the observation
+   - Ask for their name (optional, as the observation can be anonymous)
+
+4. After collecting all information, thank the user, provide a summary of the observation, and ask if they want to submit another observation or need any other help.
+
+Current step: ${currentStep}
+User input: ${input}
+
+Current observation data:
+${JSON.stringify(observationData, null, 2)}
+
+Provide a friendly and engaging response. Format your response as follows:
+{
+  "message": "Your response to the user",
+  "data": {
+    "relevantField": "Extracted information"
+  },
+  "nextStep": "Next step in the conversation"
+}`;
 
   return prompt;
 }

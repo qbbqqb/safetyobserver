@@ -12,8 +12,26 @@ export default function ChatInterface() {
   const [currentStep, setCurrentStep] = useState('location')
 
   useEffect(() => {
-    // Initial bot message
-    setMessages([{ role: 'bot', content: "Welcome! Let's report a safety observation. What's the location of the incident?" }])
+    const fetchInitialMessage = async () => {
+      try {
+        const response = await fetch('/api/chatbot', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: 'start', currentStep: 'initial', observationData: {} }),
+        });
+
+        if (!response.ok) throw new Error('Failed to get initial message');
+
+        const data = await response.json();
+        setMessages([{ role: 'bot', content: data.message }]);
+        setCurrentStep(data.nextStep);
+      } catch (error) {
+        console.error('Error fetching initial message:', error);
+        setMessages([{ role: 'bot', content: 'Welcome! Let\'s report a safety observation. What\'s the location of the incident?' }]);
+      }
+    };
+
+    fetchInitialMessage();
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
