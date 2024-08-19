@@ -75,6 +75,10 @@ export default function ChatInterface() {
         console.log('Conversation complete, preparing to save observation...');
         console.log('Final observationData:', observationData);
         await saveObservation()
+        
+        // Thank the user and confirm submission
+        const thankYouMessage = { role: 'bot' as const, content: 'Thank you for submitting your safety observation. Your report has been successfully saved. Is there anything else I can help you with?' }
+        setMessages(prev => [...prev, thankYouMessage])
       }
     } catch (error) {
       console.error('Error:', error)
@@ -98,7 +102,6 @@ export default function ChatInterface() {
       const docRef = await addDoc(collection(db, 'observations'), finalObservationData);
       console.log('Observation saved successfully. Document ID:', docRef.id);
       console.log('Saved data:', finalObservationData);
-      setMessages(prev => [...prev, { role: 'bot', content: `Thank you for your report. Your observation has been saved with ID: ${docRef.id}` }]);
     } catch (error) {
       console.error('Error saving observation:', error);
       if (error instanceof Error) {
@@ -107,7 +110,7 @@ export default function ChatInterface() {
       } else {
         console.error('Unknown error:', error);
       }
-      setMessages(prev => [...prev, { role: 'bot', content: 'There was an error saving your observation. Please try again.' }]);
+      throw error; // Re-throw the error to be caught in handleSubmit
     }
   }
 
